@@ -1,0 +1,15 @@
+[
+  {
+    "Id": 1,
+    "Steps": [
+      {
+        "Name": "Remove short items",
+        "Description": "remove items which contains less than 5 characters"
+      },
+      {
+        "Name": "Remove spaces",
+        "Description": "remove spaces from items"
+      }
+    ]
+  }
+] 

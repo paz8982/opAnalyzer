@@ -5,8 +5,9 @@ using System.Threading.Tasks;
 
 namespace OPAnalyzer.Analyzer
 {
-    public interface IAnalyzable
+    interface IExtractable
     {
-        string[] Analyze(string[] data, long analysisFlowId);
+        string APIurl { get; }
+        string[] Extract(string Data);
     }
 }

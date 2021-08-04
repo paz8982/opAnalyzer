@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using OPAnalyzer.Analyzer;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -28,76 +29,23 @@ namespace OPAnalyzer.Controllers
         }*/
 
         [HttpGet]
-        public IActionResult Get(string DataSource)
+        public IActionResult Get(string DataSource, long analysisFlowId)
         {
             string Data;
             string[] AnalyzedData;
-            if(DataSource.ToLower() == "stackoverflow")
-            {
-                Data = GetDataFromAPI("https://api.stackexchange.com/2.2/tags/highcharts/faq?site=stackoverflow");
-                StackoverflowAnalyzer Analyzer = new StackoverflowAnalyzer();
-                AnalyzedData = Analyzer.Analyze(Data);
-            }
-            else
-            {
-                Data = GetDataFromAPI("https://api.github.com/repos/highcharts/highcharts/commits");
-                GithubAnalyzer Analyzer = new GithubAnalyzer();
-                AnalyzedData = Analyzer.Analyze(Data);
-            }
-            //check which dataSource we got
-            //if datasource is stackoverflow 
-            //get from stackoverflow API the data
-            //analize this data and return
+            DataSourceService fetchDataService = new DataSourceService();
+            DataSource dataSource = fetchDataService.GetDataSourceInstance(DataSource);
 
-            //if datasource is github 
-            //get from github API the data
-            //analize this data and return
-            return Ok(AnalyzedData);
+            string data = fetchDataService.FetchData(dataSource.APIurl);
+            string[] extractedData = dataSource.Extract(data);
+            //return Ok(extractedData);
+
+            string[] dataAfterAnalysis = dataSource.Analyze(extractedData, analysisFlowId);
+            //string[] dataAfterAnalysis = analysisService.AnalizeData(extractedData, analysisFlowId);
+            return Ok(dataAfterAnalysis);
+
         }
 
-        private string GetDataFromAPI(string APIurl) //maybe extract this to abstract class that the analyzers will inherit
-        {
-            string html = string.Empty;
-
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(APIurl);
-            request.UserAgent = "Paz";
-            request.AutomaticDecompression = DecompressionMethods.GZip;
-
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-            using (Stream stream = response.GetResponseStream())
-            using (StreamReader reader = new StreamReader(stream))
-            {
-                html = reader.ReadToEnd();
-            }
-
-            Console.WriteLine(html);
-            return html;
-        }
-
-        /*private string[] AnalyzeStackoverflow(string Data)
-        {
-            JObject json = JObject.Parse(Data);
-            var Items = json.GetValue("items");
-            List<string> Titles = new List<string>();
-            foreach(Object item in Items)
-            {
-                JObject jsonItem = JObject.Parse(item.ToString());
-                Titles.Add(jsonItem.GetValue("title").ToString());
-            }
-            return Titles.ToArray();
-        }
-
-        private string[] AnalyzeGithub(string Data)
-        {
-            JArray json = JArray.Parse(Data);
-            List<string> Messages = new List<string>();
-            foreach (Object messageObject in json)
-            {
-                var commitObj = JObject.Parse(messageObject.ToString()).GetValue("commit");
-                Messages.Add(JObject.Parse(commitObj.ToString()).GetValue("message").ToString());
-            }
-           
-            return Messages.ToArray();
-        }*/
+       //ozi recommended changing DataSource abtract class to interface - thing about it
     }
 }
